@@ -81,6 +81,7 @@ const commands = [
 ];
 
 const prefix = "!";
+const updatesChannelId = "1244730880551944192";
 
 const annoyThreshold = 10;
 
@@ -206,7 +207,8 @@ client.on("ready", () => {
     ],
     status: "dnd",
   });
-  setCommands();
+  //setCommands();
+  client.channels.cache.get(updatesChannelId).send("i have awoken");
 });
 
 client.on("messageCreate", async (message) => {
