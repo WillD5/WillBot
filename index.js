@@ -25,6 +25,36 @@ const commands = [
     description: "Shows commands summary.",
   },
   {
+    name: "rps",
+    description: "Play rock paper scissors with the bot!",
+    options: [
+      {
+        name: "choice",
+        description: "Your choice of rock, paper, or scissors.",
+        type: 3,
+        required: true,
+        choices: [
+          {
+            name: "Rock",
+            value: "rock",
+          },
+          {
+            name: "Paper",
+            value: "paper",
+          },
+          {
+            name: "Scissors",
+            value: "scissors",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    name: "rng",
+    description: "Generates a random number from 1 to 100.",
+  },
+  {
     name: "annoy",
     description: "Pings a user 10 times and deletes the messages. (Admin+)",
     options: [
@@ -144,7 +174,7 @@ function annoy(message, query, threshold = annoyThreshold) {
     message.reply("You do not have permission to use this command.");
   }
 }
-function rockpaperscissors(message, userChoice) {
+function RockPaperScissors(message, userChoice) {
   let choices = ["rock", "paper", "scissors"];
   const botChoice = choices[Math.floor(Math.random() * 3)];
   if (choices.includes(userChoice)) {
@@ -195,7 +225,7 @@ client.on("messageCreate", async (message) => {
       message.channel.send(help());
       break;
     case "rps":
-      rockpaperscissors(message, args[1]);
+      RockPaperScissors(message, args[1]);
       break;
     case "rng":
       message.reply(Math.floor(Math.random() * 100).toString());
@@ -226,6 +256,12 @@ client.on("interactionCreate", async (interaction) => {
       break;
     case "hello":
       await interaction.reply("Hello!");
+      break;
+    case "rps":
+      RockPaperScissors(interaction, interaction.options.getString("choice"));
+      break;
+    case "rng":
+      interaction.reply(Math.floor(Math.random() * 100).toString());
       break;
     case "help":
       interaction.reply(help());
