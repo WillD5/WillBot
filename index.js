@@ -119,7 +119,7 @@ function help(message) {
         value: "Pings a user 10 times, then deletes the messages. (Admin+)",
       }
     );
-  message.channel.send({ embeds: [embed] });
+  return { embeds: [embed] };
 }
 
 function purge(message, number) {
@@ -192,7 +192,7 @@ client.on("messageCreate", async (message) => {
       message.reply("Hello!");
       break;
     case "help":
-      help(message);
+      message.channel.send(help());
       break;
     case "rps":
       rockpaperscissors(message, args[1]);
@@ -228,7 +228,7 @@ client.on("interactionCreate", async (interaction) => {
       await interaction.reply("Hello!");
       break;
     case "help":
-      help(interaction);
+      interaction.reply(help());
       break;
     case "purge":
       let number = interaction.options.getInteger("number");
