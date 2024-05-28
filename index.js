@@ -51,6 +51,18 @@ const commands = [
     ],
   },
   {
+    name: "8ball",
+    description: "Ask the 8ball a question and it will give you an answer!",
+    options: [
+      {
+        name: "query",
+        description: "Question to ask the 8ball",
+        type: 3,
+        required: true,
+      },
+    ],
+  },
+  {
     name: "rng",
     description: "Generates a random number from 1 to 100.",
   },
@@ -133,8 +145,12 @@ function help(message) {
         value: "Greet the bot!",
       },
       {
-        name: "!rps",
+        name: "!rps (choice)",
         value: "Play rock paper scissors with a highly advanced AI opponent.",
+      },
+      {
+        name: "!8ball (query)",
+        value: "Ask the 8ball a question and it will give you an answer!",
       },
       {
         name: "!rng",
@@ -170,7 +186,7 @@ function annoy(message, query, threshold = annoyThreshold) {
     }
     setTimeout(() => {
       message.channel.bulkDelete(threshold);
-    }, 6300);
+    }, 6500);
   } else {
     message.reply("You do not have permission to use this command.");
   }
@@ -195,6 +211,27 @@ function RockPaperScissors(message, userChoice) {
   }
 }
 
+function eightball(message, query) {
+  console.log(query);
+  if (!query) {
+    message.reply("You need to ask a question!");
+    return;
+  }
+  let responses = [
+    "Yes",
+    "No",
+    "Maybe",
+    "Ask again later",
+    "Most likely",
+    "Most unlikely",
+    "I don't know",
+    "I don't care",
+    "I don't think so",
+    "I think so",
+  ];
+  message.reply(responses[Math.floor(Math.random() * responses.length)]);
+}
+
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}`);
   client.user.setPresence({
@@ -207,7 +244,7 @@ client.on("ready", () => {
     ],
     status: "dnd",
   });
-  //setCommands();
+  setCommands();
   client.channels.cache.get(updatesChannelId).send("i have awoken");
 });
 
@@ -228,6 +265,9 @@ client.on("messageCreate", async (message) => {
       break;
     case "rps":
       RockPaperScissors(message, args[1]);
+      break;
+    case "8ball":
+      eightball(message, args.join(" ").substring(5));
       break;
     case "rng":
       message.reply(Math.floor(Math.random() * 100).toString());
@@ -261,6 +301,9 @@ client.on("interactionCreate", async (interaction) => {
       break;
     case "rps":
       RockPaperScissors(interaction, interaction.options.getString("choice"));
+      break;
+    case "8ball":
+      eightball(interaction, interaction.options.getString("query"));
       break;
     case "rng":
       interaction.reply(Math.floor(Math.random() * 100).toString());
