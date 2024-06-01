@@ -181,6 +181,10 @@ function purge(message, number) {
 
 function annoy(message, query, threshold = annoyThreshold) {
   if (message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+    if (!query) {
+      message.reply("You need to specify a user to annoy!");
+      return;
+    }
     for (let i = 0; i < annoyThreshold; i++) {
       message.channel.send(query);
     }
@@ -189,6 +193,7 @@ function annoy(message, query, threshold = annoyThreshold) {
     }, 6500);
   } else {
     message.reply("You do not have permission to use this command.");
+    return;
   }
 }
 function RockPaperScissors(message, userChoice) {
@@ -267,7 +272,7 @@ client.on("messageCreate", async (message) => {
       RockPaperScissors(message, args[1]);
       break;
     case "8ball":
-      eightball(message, args.join(" ").substring(5));
+      eightball(message, args.join(" ").substring(6));
       break;
     case "rng":
       message.reply(Math.floor(Math.random() * 100).toString());
