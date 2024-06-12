@@ -21,8 +21,8 @@ jobs:
             sudo apt-get update -y
             sudo git clone https://github.com/WillD5/WillBot.git
             cd WillBot
-            npm i
-            touch .env
-            echo DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }} >> .env
-            echo CLIENT_ID=${{ secrets.CLIENT_ID }} >> .env
+            sudo npm i
+            sudo touch .env
+            sudo echo DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }} >> .env
+            sudo echo CLIENT_ID=${{ secrets.CLIENT_ID }} >> .env
             pm2 start index.js
