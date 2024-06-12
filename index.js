@@ -244,7 +244,6 @@ client.on("ready", () => {
       {
         name: `Tornadic Studios' Comeback`,
         type: ActivityType.Watching,
-        state: "Run /help to see my commands!",
       },
     ],
     status: "dnd",
