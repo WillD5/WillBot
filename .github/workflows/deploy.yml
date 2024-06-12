@@ -19,7 +19,7 @@ jobs:
             pm2 stop index
             sudo rm -rf WillBot
             sudo apt-get update -y
-            sudo git clone git@github.com:WillD5/WillBot.git
+            sudo git clone https://github.com/WillD5/WillBot.git
             cd WillBot
             sudo npm i
             sudo touch .env
