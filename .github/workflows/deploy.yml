@@ -20,6 +20,7 @@ jobs:
             sudo rm -rf WillBot
             sudo apt-get update -y
             sudo git clone https://github.com/WillD5/WillBot.git
+            cd WillBot
             sudo npm i
             sudo touch .env
             echo DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }} >> .env
