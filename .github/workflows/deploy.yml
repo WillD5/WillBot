@@ -23,6 +23,6 @@ jobs:
             cd WillBot
             sudo npm i
             sudo touch .env
-            sudo echo DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }} >> .env
-            sudo echo CLIENT_ID=${{ secrets.CLIENT_ID }} >> .env
+            sudo bash -c 'echo DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }} >> .env'
+            sudo bash -c 'echo CLIENT_ID=${{ secrets.CLIENT_ID }} >> .env'
             pm2 start index.js
