@@ -179,6 +179,39 @@ function purge(message, number) {
   }
 }
 
+function kick(message) {
+  if (message.member.permissions.has(PermissionsBitField.Flags.KickMembers)) {
+    var user = message.mentions.members.first();
+    console.log(user);
+    if (!user) {
+      message.channel.send("You need to specify a user to kick!");
+      return;
+    }
+    if (!user.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      message.channel.send(":x: I cannot kick this user!");
+      return;
+    }
+    user
+      .kick()
+      .then(() => {
+        // Successmessage
+        message.channel.send(
+          ":white_check_mark: " +
+            user.displayName +
+            " has been successfully kicked"
+        );
+      })
+      .catch(() => {
+        // Failmessage
+        message.channel.send(
+          ":x: | An error has occured, contact the Bot Maintainer."
+        );
+      });
+  } else {
+    message.channel.send("Invalid Permissions");
+  }
+}
+
 function annoy(message, query, threshold = annoyThreshold) {
   if (message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
     if (!query) {
@@ -287,6 +320,9 @@ client.on("messageCreate", async (message) => {
       break;
     case "annoy":
       annoy(message, args[1], annoyThreshold + 1);
+      break;
+    case "kick":
+      kick(message);
       break;
     default:
       message.reply("Invalid command");
