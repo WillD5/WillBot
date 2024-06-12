@@ -7,9 +7,22 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: a
+        uses: appleboy/ssh-action@v0.1.2
+
         with:
-          node-version: 20
-      - run: |
-            npm i
+          host: ${{secrets.SSH_HOST}}
+          #key: ${{secrets.SSH_KEY}}
+          username: ${{ secrets.USERNAME}}
+
+          script: |
+            pm2 stop index
+            cd /www
+            sudo rm -rf WillBot
+            sudo apt-get update -y
+            sudo git clone https://github.com/WillD5/WillBot.git
+            sudo npm i
+            sudo touch .env
+            sudo echo "DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }}" >> .env
+            sudo echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> .env
+            pm2 start index.js
