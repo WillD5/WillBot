@@ -94,6 +94,42 @@ const commands = [
       },
     ],
   },
+  {
+    name: "kick",
+    description: "Kicks the pinged user. (Mod+)",
+    options: [
+      {
+        name: "user",
+        description: "User to kick.",
+        type: 6,
+        required: true,
+      },
+    ],
+  },
+  {
+    name: "ban",
+    description: "Bans the pinged user. (Mod+)",
+    options: [
+      {
+        name: "user",
+        description: "User to ban.",
+        type: 6,
+        required: true,
+      },
+    ],
+  },
+  {
+    name: "unban",
+    description: "Unbans a user by their id. (Mod+)",
+    options: [
+      {
+        name: "id",
+        description: "Id of user to unban",
+        type: 3,
+        required: true,
+      },
+    ],
+  },
 ];
 
 const prefix = "!";
@@ -160,15 +196,7 @@ function help(message) {
         name: "!rng",
         value: "Generate a random number going from 1 to 100!",
       },
-      { name: "!help", value: "Shows this command!" },
-      {
-        name: "!purge",
-        value: "Used to delete messages in bulk. (Mod+)",
-      },
-      {
-        name: "!annoy",
-        value: "Pings a user 10 times, then deletes the messages. (Admin+)",
-      }
+      { name: "!help", value: "Shows this command!" }
     );
   return { embeds: [embed] };
 }
@@ -183,90 +211,99 @@ function purge(message, number) {
   }
 }
 
-function kick(message, query, reason = "") {
+async function kick(message, query, reason = "") {
   if (message.member.permissions.has(PermissionsBitField.Flags.KickMembers)) {
-    var id = query;
-    var user = message.mentions.members.first();
-    if (!user) {
+    if (!query) {
       message.channel.send("You need to specify a user to kick!");
       return;
     }
-    if (user.permissions.has(PermissionsBitField.Flags.Administrator)) {
-      message.channel.send(":x: I cannot kick this user!");
+    var user = "";
+    try {
+      if (isNumeric(query)) {
+        var user = await message.guild.members.fetch(query);
+      } else {
+        var user = await message.mentions.members.first();
+      }
+    } catch (e) {
+      message.reply("Invalid user");
       return;
     }
-    const guild = message.guild;
-    guild.members
+    if (user.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      message.reply(":x: I cannot kick this user!");
+      return;
+    }
+    const id = user.user.id;
+    message.guild.members
       .kick(id, reason)
       .then(() => {
-        message.channel.send(
+        message.reply(
           ":white_check_mark: | " +
             user.user.username +
             " has been successfully kicked."
         );
       })
       .catch(() => {
-        message.channel.send(
+        message.reply(
           ":x: | An error has occured, contact the Bot Maintainer."
         );
       });
   } else {
-    message.channel.send("Invalid Permissions");
+    message.reply("Invalid Permissions");
   }
 }
 
 async function ban(message, query, reason = "") {
   if (message.member.permissions.has(PermissionsBitField.Flags.BanMembers)) {
     if (!query) {
-      message.channel.send("You need to specify a user to ban!");
+      message.reply("You need to specify a user to ban!");
       return;
     }
     var user = "";
     try {
-      var user =
-        (await message.mentions.members.first()) ||
-        (await message.guild.members.fetch(query));
+      if (isNumeric(query)) {
+        var user = await message.guild.members.fetch(query);
+      } else {
+        var user = await message.mentions.members.first();
+      }
     } catch (e) {
-      message.channel.send("Invalid user");
+      message.reply("Invalid user");
       return;
     }
-    var id = user.user.id;
+    const id = user.user.id;
     if (user.permissions.has(PermissionsBitField.Flags.Administrator)) {
-      message.channel.send(":x: I cannot ban this user!");
+      message.reply(":x: I cannot ban this user!");
       return;
     }
-    const guild = message.guild;
-    guild.members
+    message.guild.members
       .ban(id, { reason: reason })
       .then(() => {
-        message.channel.send(
+        message.reply(
           ":white_check_mark: | " +
             user.user.username +
             " has been successfully banned."
         );
       })
       .catch(() => {
-        message.channel.send(
+        message.reply(
           ":x: | An error has occured, contact the Bot Maintainer."
         );
       });
   } else {
-    message.channel.send("Invalid Permissions");
+    message.reply("Invalid Permissions");
   }
 }
 
-function unban(message, id) {
+function unban(message, id, reason = "") {
   if (message.member.permissions.has(PermissionsBitField.Flags.BanMembers)) {
     if (!id || !isNumeric(id)) {
-      message.channel.send("Invalid user id.");
+      message.reply("Invalid user id.");
       return;
     }
-    const guild = message.guild;
-    guild.members
-      .unban(id)
+    message.guild.members
+      .unban(id, reason)
       .then((e) => {
         if (e) {
-          message.channel.send(
+          message.reply(
             ":x: | An error has occured, contact the Bot Maintainer."
           );
           return;
@@ -276,7 +313,7 @@ function unban(message, id) {
         );
       })
       .catch(() => {
-        message.channel.send(":x: | User is not banned.");
+        message.reply(":x: | User is not banned.");
       });
   }
 }
@@ -405,7 +442,8 @@ client.on("messageCreate", async (message) => {
 
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
-
+  let user = "";
+  let query = "";
   switch (interaction.commandName) {
     case "ping":
       await interaction.reply("Pong!");
@@ -434,13 +472,25 @@ client.on("interactionCreate", async (interaction) => {
       });
       break;
     case "annoy":
-      const user = interaction.options.getUser("user");
-      let query = "<@" + user.id + ">";
+      user = interaction.options.getUser("user");
+      query = "<@" + user.id + ">";
       annoy(interaction, query);
       interaction.reply({
         content: "Annoying " + user.username,
         ephemeral: true,
       });
+      break;
+    case "kick":
+      user = interaction.options.getUser("user");
+      kick(interaction, user.id);
+      break;
+    case "ban":
+      user = interaction.options.getUser("user");
+      ban(interaction, user.id);
+      break;
+    case "unban":
+      const id = interaction.options.getString("id");
+      unban(interaction, parseInt(id));
       break;
     default:
       await interaction.reply("Invalid command");
