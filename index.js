@@ -11,6 +11,10 @@ import {
   EmbedBuilder,
 } from "discord.js";
 
+function isNumeric(value) {
+  return /^-?\d+$/.test(value);
+}
+
 const commands = [
   {
     name: "ping",
@@ -179,36 +183,101 @@ function purge(message, number) {
   }
 }
 
-function kick(message) {
+function kick(message, query, reason = "") {
   if (message.member.permissions.has(PermissionsBitField.Flags.KickMembers)) {
+    var id = query;
     var user = message.mentions.members.first();
-    console.log(user);
     if (!user) {
       message.channel.send("You need to specify a user to kick!");
       return;
     }
-    if (!user.permissions.has(PermissionsBitField.Flags.Administrator)) {
+    if (user.permissions.has(PermissionsBitField.Flags.Administrator)) {
       message.channel.send(":x: I cannot kick this user!");
       return;
     }
-    user
-      .kick()
+    const guild = message.guild;
+    guild.members
+      .kick(id, reason)
       .then(() => {
-        // Successmessage
         message.channel.send(
-          ":white_check_mark: " +
-            user.displayName +
-            " has been successfully kicked"
+          ":white_check_mark: | " +
+            user.user.username +
+            " has been successfully kicked."
         );
       })
       .catch(() => {
-        // Failmessage
         message.channel.send(
           ":x: | An error has occured, contact the Bot Maintainer."
         );
       });
   } else {
     message.channel.send("Invalid Permissions");
+  }
+}
+
+async function ban(message, query, reason = "") {
+  if (message.member.permissions.has(PermissionsBitField.Flags.BanMembers)) {
+    if (!query) {
+      message.channel.send("You need to specify a user to ban!");
+      return;
+    }
+    var user = "";
+    try {
+      var user =
+        (await message.mentions.members.first()) ||
+        (await message.guild.members.fetch(query));
+    } catch (e) {
+      message.channel.send("Invalid user");
+      return;
+    }
+    var id = user.user.id;
+    if (user.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      message.channel.send(":x: I cannot ban this user!");
+      return;
+    }
+    const guild = message.guild;
+    guild.members
+      .ban(id, { reason: reason })
+      .then(() => {
+        message.channel.send(
+          ":white_check_mark: | " +
+            user.user.username +
+            " has been successfully banned."
+        );
+      })
+      .catch(() => {
+        message.channel.send(
+          ":x: | An error has occured, contact the Bot Maintainer."
+        );
+      });
+  } else {
+    message.channel.send("Invalid Permissions");
+  }
+}
+
+function unban(message, id) {
+  if (message.member.permissions.has(PermissionsBitField.Flags.BanMembers)) {
+    if (!id || !isNumeric(id)) {
+      message.channel.send("Invalid user id.");
+      return;
+    }
+    const guild = message.guild;
+    guild.members
+      .unban(id)
+      .then((e) => {
+        if (e) {
+          message.channel.send(
+            ":x: | An error has occured, contact the Bot Maintainer."
+          );
+          return;
+        }
+        message.channel.send(
+          ":white_check_mark: | user has been successfully unbanned."
+        );
+      })
+      .catch(() => {
+        message.channel.send(":x: | User is not banned.");
+      });
   }
 }
 
@@ -250,7 +319,6 @@ function RockPaperScissors(message, userChoice) {
 }
 
 function eightball(message, query) {
-  console.log(query);
   if (!query) {
     message.reply("You need to ask a question!");
     return;
@@ -322,7 +390,13 @@ client.on("messageCreate", async (message) => {
       annoy(message, args[1], annoyThreshold + 1);
       break;
     case "kick":
-      kick(message);
+      kick(message, args[1], args[2]);
+      break;
+    case "ban":
+      ban(message, args[1], args[2]);
+      break;
+    case "unban":
+      unban(message, args[1], args[2]);
       break;
     default:
       message.reply("Invalid command");
