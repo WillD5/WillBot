@@ -315,6 +315,8 @@ function unban(message, id, reason = "") {
       .catch(() => {
         message.reply(":x: | User is not banned.");
       });
+  } else {
+    message.reply("Invalid Permissions");
   }
 }
 
