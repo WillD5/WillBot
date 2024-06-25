@@ -1,6 +1,15 @@
 import dotenv from "dotenv";
 dotenv.config();
 
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const fs = require("node:fs");
+
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
 import {
   Client,
   REST,
@@ -13,6 +22,65 @@ import {
 
 function isNumeric(value) {
   return /^-?\d+$/.test(value);
+}
+
+function getWeekDay(day) {
+  const days = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  return days[day];
+}
+
+function getMonth(month) {
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  return months[month];
+}
+
+function getCurrentDate() {
+  const dateObj = new Date();
+  const DateStr1 =
+    "[" +
+    getWeekDay(dateObj.getDay()) +
+    ", " +
+    dateObj.getDate() +
+    " " +
+    getMonth(dateObj.getMonth()) +
+    " " +
+    dateObj.getFullYear() +
+    " " +
+    dateObj.getHours() +
+    ":" +
+    dateObj.getMinutes() +
+    ":" +
+    dateObj.getSeconds() +
+    "] ";
+  return DateStr1;
+}
+
+const errorLogFilePath = __dirname + "/../errorLog.txt";
+
+function writeErrorLog(message) {
+  if (!fs.existsSync(errorLogFilePath)) fs.writeFileSync(errorLogFilePath, "");
+  fs.appendFileSync(errorLogFilePath, getCurrentDate() + message + "\n");
 }
 
 const commands = [
@@ -134,6 +202,7 @@ const commands = [
 
 const prefix = "!";
 const updatesChannelId = "1244730880551944192";
+const moderationChannelId = "1242905048846041189";
 
 const annoyThreshold = 10;
 
@@ -161,7 +230,7 @@ async function setCommands() {
   }
 }
 
-function help(message) {
+function help() {
   const embed = new EmbedBuilder()
     .setTitle("Willbot Commands")
     .setColor("29bcc0")
@@ -205,6 +274,11 @@ function purge(message, number) {
   if (
     message.member.permissions.has(PermissionsBitField.Flags.ManageMessages)
   ) {
+    client.channels.cache
+      .get(moderationChannelId)
+      .send(
+        message.members.user.username + " has purged " + number + " messages."
+      );
     message.channel.bulkDelete(number);
   } else {
     message.channel.send(":x: Insufficient Permissions");
@@ -241,11 +315,16 @@ async function kick(message, query, reason = "") {
             user.user.username +
             " has been successfully kicked."
         );
+        "User " +
+          message.member.user.username +
+          " has kicked " +
+          user.user.username;
       })
       .catch(() => {
         message.reply(
           ":x: | An error has occured, contact the Bot Maintainer."
         );
+        writeErrorLog("Error while trying to kick user: " + e);
       });
   } else {
     message.reply("Invalid Permissions");
@@ -282,11 +361,20 @@ async function ban(message, query, reason = "") {
             user.user.username +
             " has been successfully banned."
         );
+        client.channels.cache
+          .get(moderationChannelId)
+          .send(
+            "User " +
+              message.member.user.username +
+              " has banned " +
+              user.user.username
+          );
       })
       .catch(() => {
         message.reply(
           ":x: | An error has occured, contact the Bot Maintainer."
         );
+        writeErrorLog("Error while trying to ban user: " + e);
       });
   } else {
     message.reply("Invalid Permissions");
@@ -306,11 +394,20 @@ function unban(message, id, reason = "") {
           message.reply(
             ":x: | An error has occured, contact the Bot Maintainer."
           );
+          writeErrorLog("Error while trying to unban user: " + e);
           return;
         }
         message.channel.send(
           ":white_check_mark: | user has been successfully unbanned."
         );
+        client.channels.cache
+          .get(moderationChannelId)
+          .send(
+            "User" +
+              message.member.user.username +
+              " has unbanned user with id:" +
+              id
+          );
       })
       .catch(() => {
         message.reply(":x: | User is not banned.");
@@ -320,18 +417,23 @@ function unban(message, id, reason = "") {
   }
 }
 
-function annoy(message, query, threshold = annoyThreshold) {
+async function annoy(message, query, threshold = annoyThreshold) {
   if (message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
     if (!query) {
       message.reply("You need to specify a user to annoy!");
       return;
     }
+    const sendPromises = [];
+
     for (let i = 0; i < annoyThreshold; i++) {
-      message.channel.send(query);
+      sendPromises.push(message.channel.send(query));
     }
-    setTimeout(() => {
-      message.channel.bulkDelete(threshold);
-    }, 6500);
+
+    await Promise.all(sendPromises);
+
+    message.channel
+      .bulkDelete(threshold)
+      .catch((err) => writeErrorLog("Error while trying to annoy user: " + err));
   } else {
     message.reply("You do not have permission to use this command.");
     return;
@@ -370,7 +472,6 @@ function eightball(message, query) {
     "Most likely",
     "Most unlikely",
     "I don't know",
-    "I don't care",
     "I don't think so",
     "I think so",
   ];
