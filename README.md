@@ -13,6 +13,9 @@ Then, make a .env file with your values under this format:
 ```env
 DISCORD_TOKEN = token_here
 CLIENT_ID = client_id_here
+ENVIRONMENT = DEV/PROD
+STATUS_CHANNEL_ID = channel_id_here
+MODERATION_CHANNEL_ID = channel_id_here
 ```
 Start the app with this command:
 ```node

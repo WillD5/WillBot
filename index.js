@@ -139,6 +139,14 @@ const commands = [
     description: "Generates a random number from 1 to 100.",
   },
   {
+    name: "diceroll",
+    description: "Roll a 6-faced dice!",
+  },
+  {
+    name: "membercount",
+    description: "Shows the number of members currently in the server.",
+  },
+  {
     name: "annoy",
     description: "Pings a user 10 times and deletes the messages. (Admin+)",
     options: [
@@ -201,8 +209,8 @@ const commands = [
 ];
 
 const prefix = "!";
-const updatesChannelId = "1244730880551944192";
-const moderationChannelId = "1242905048846041189";
+const updatesChannelId = process.env.STATUS_CHANNEL_ID;
+const moderationChannelId = process.env.MODERATION_CHANNEL_ID;
 
 const annoyThreshold = 10;
 
@@ -230,7 +238,7 @@ async function setCommands() {
   }
 }
 
-function help() {
+function help(message) {
   const embed = new EmbedBuilder()
     .setTitle("Willbot Commands")
     .setColor("29bcc0")
@@ -265,9 +273,17 @@ function help() {
         name: "!rng",
         value: "Generate a random number going from 1 to 100!",
       },
+      {
+        name: "!diceroll",
+        value: "Roll a dice with 6 faces!",
+      },
+      {
+        name: "!membercount",
+        value: "Shows the number of members in the server.",
+      },
       { name: "!help", value: "Shows this command!" }
     );
-  return { embeds: [embed] };
+  message.reply({ embeds: [embed] });
 }
 
 function purge(message, number) {
@@ -433,7 +449,9 @@ async function annoy(message, query, threshold = annoyThreshold) {
 
     message.channel
       .bulkDelete(threshold)
-      .catch((err) => writeErrorLog("Error while trying to annoy user: " + err));
+      .catch((err) =>
+        writeErrorLog("Error while trying to annoy user: " + err)
+      );
   } else {
     message.reply("You do not have permission to use this command.");
     return;
@@ -478,6 +496,20 @@ function eightball(message, query) {
   message.reply(responses[Math.floor(Math.random() * responses.length)]);
 }
 
+function rng(message) {
+  message.reply(Math.floor(Math.random() * 100).toString());
+}
+
+function diceroll(message) {
+  const number = Math.floor(Math.random() * 6) + 1;
+  message.reply("You roled a **" + number.toString() + "**!");
+}
+
+function membercount(message) {
+  const memberCount = message.guild.memberCount.toString();
+  message.reply("The server curently has **" + memberCount + "** members.");
+}
+
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}`);
   client.user.setPresence({
@@ -490,7 +522,8 @@ client.on("ready", () => {
     status: "dnd",
   });
   setCommands();
-  client.channels.cache.get(updatesChannelId).send("i have awoken");
+  if (process.env.ENVIRONMENT === "PROD")
+    client.channels.cache.get(updatesChannelId).send("i have awoken");
 });
 
 client.on("messageCreate", async (message) => {
@@ -506,7 +539,7 @@ client.on("messageCreate", async (message) => {
       message.reply("Hello!");
       break;
     case "help":
-      message.channel.send(help());
+      help(message);
       break;
     case "rps":
       RockPaperScissors(message, args[1]);
@@ -515,7 +548,13 @@ client.on("messageCreate", async (message) => {
       eightball(message, args.join(" ").substring(6));
       break;
     case "rng":
-      message.reply(Math.floor(Math.random() * 100).toString());
+      rng(message);
+      break;
+    case "membercount":
+      membercount(message);
+      break;
+    case "diceroll":
+      diceroll(message);
       break;
     case "purge":
       let number = 0;
@@ -561,10 +600,16 @@ client.on("interactionCreate", async (interaction) => {
       eightball(interaction, interaction.options.getString("query"));
       break;
     case "rng":
-      interaction.reply(Math.floor(Math.random() * 100).toString());
+      rng(interaction);
+      break;
+    case "diceroll":
+      diceroll(interaction);
       break;
     case "help":
-      interaction.reply(help());
+      help(interaction);
+      break;
+    case "membercount":
+      membercount(interaction);
       break;
     case "purge":
       let number = interaction.options.getInteger("number");

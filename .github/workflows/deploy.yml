@@ -25,4 +25,7 @@ jobs:
             sudo touch .env
             sudo bash -c 'echo DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }} >> .env'
             sudo bash -c 'echo CLIENT_ID=${{ secrets.CLIENT_ID }} >> .env'
+            sudo bash -c 'echo ENVIRONMENT=PROD >> .env'
+            sudo bash -c 'echo STATUS_CHANNEL_ID = 1244730880551944192 >> .env'
+            sudo bash -c 'echo MODERATION_CHANNEL_ID = 1242905048846041189 >> .env'
             pm2 start index.js
