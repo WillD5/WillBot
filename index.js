@@ -298,6 +298,9 @@ function help(message) {
   message.reply({ embeds: [embed] });
 }
 
+/**
+ * Need to complete descriptions
+ */
 function auso(message) {
   const embed = new EmbedBuilder()
     .setTitle("AUSO")
@@ -314,23 +317,23 @@ function auso(message) {
     .addFields(
       {
         name: "Kuzrite - Head Sushunter",
-        value: "a",
+        value: "a sus person",
       },
       {
         name: "WillTheOofer - Deputy Head Sushunter",
-        value: "a",
+        value: "a sus person",
       },
       {
         name: "AliasAltan - Lead Insustigator",
-        value: "a",
+        value: "a sus person",
       },
       {
-        name: "Mrs_Sesh2 - Recruitement Lead",
-        value: "a",
+        name: "Mrs_Sesh2 - Head of Recruitement",
+        value: "a sus person",
       },
       {
         name: "Fritz - Senior Sushunter",
-        value: "a",
+        value: "a sus person",
       }
     );
   message.reply({ embeds: [embed] });
@@ -530,6 +533,9 @@ function RockPaperScissors(message, userChoice) {
     message.reply("Invalid choice");
   }
 }
+/**
+ * Need to add more scenarios
+ */
 function fight(message, author, user) {
   if (!user) {
     message.reply("You need to specify a user to fight!");
