@@ -331,12 +331,16 @@ async function kick(message, query, reason = "") {
             user.user.username +
             " has been successfully kicked."
         );
-        "User " +
-          message.member.user.username +
-          " has kicked " +
-          user.user.username;
+        client.channels.cache
+          .get(moderationChannelId)
+          .send(
+            "User " +
+              message.member.user.username +
+              " has kicked " +
+              user.user.username
+          );
       })
-      .catch(() => {
+      .catch((e) => {
         message.reply(
           ":x: | An error has occured, contact the Bot Maintainer."
         );
@@ -354,39 +358,46 @@ async function ban(message, query, reason = "") {
       return;
     }
     var user = "";
+    var id = 0;
+    var isServerMember = true;
     try {
       if (isNumeric(query)) {
-        var user = await message.guild.members.fetch(query);
+        id = query;
+        try {
+          user = await message.guild.members.fetch(query);
+        } catch (e) {
+          user = await client.users.fetch(query);
+          isServerMember = false;
+        }
       } else {
-        var user = await message.mentions.members.first();
+        user = await message.mentions.members.first();
+        id = user.user.id;
       }
     } catch (e) {
       message.reply("Invalid user");
       return;
     }
-    const id = user.user.id;
-    if (user.permissions.has(PermissionsBitField.Flags.Administrator)) {
-      message.reply(":x: I cannot ban this user!");
-      return;
-    }
+    var username = "";
+    if (isServerMember) {
+      if (user.permissions.has(PermissionsBitField.Flags.Administrator)) {
+        message.reply(":x: I cannot ban this user!");
+        return;
+      }
+      username = user.user.username;
+    } else username = user.username;
     message.guild.members
       .ban(id, { reason: reason })
       .then(() => {
         message.reply(
-          ":white_check_mark: | " +
-            user.user.username +
-            " has been successfully banned."
+          ":white_check_mark: | " + username + " has been successfully banned."
         );
         client.channels.cache
           .get(moderationChannelId)
           .send(
-            "User " +
-              message.member.user.username +
-              " has banned " +
-              user.user.username
+            "User " + message.member.user.username + " has banned " + username
           );
       })
-      .catch(() => {
+      .catch((e) => {
         message.reply(
           ":x: | An error has occured, contact the Bot Maintainer."
         );
@@ -405,14 +416,7 @@ function unban(message, id, reason = "") {
     }
     message.guild.members
       .unban(id, reason)
-      .then((e) => {
-        if (e) {
-          message.reply(
-            ":x: | An error has occured, contact the Bot Maintainer."
-          );
-          writeErrorLog("Error while trying to unban user: " + e);
-          return;
-        }
+      .then(() => {
         message.channel.send(
           ":white_check_mark: | user has been successfully unbanned."
         );
@@ -425,7 +429,7 @@ function unban(message, id, reason = "") {
               id
           );
       })
-      .catch(() => {
+      .catch((e) => {
         message.reply(":x: | User is not banned.");
       });
   } else {
