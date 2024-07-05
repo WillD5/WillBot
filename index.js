@@ -24,56 +24,52 @@ function isNumeric(value) {
   return /^-?\d+$/.test(value);
 }
 
-function getWeekDay(day) {
-  const days = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-  ];
-  return days[day];
-}
-
-function getMonth(month) {
-  const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-  return months[month];
-}
-
 function getCurrentDate() {
   const dateObj = new Date();
-  const DateStr1 =
+  const DateStr =
     "[" +
-    getWeekDay(dateObj.getDay()) +
+    [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ][dateObj.getDay()] +
     ", " +
     dateObj.getDate() +
     " " +
-    getMonth(dateObj.getMonth()) +
+    [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ][dateObj.getMonth()] +
     " " +
     dateObj.getFullYear() +
     " " +
-    dateObj.getHours() +
-    ":" +
-    dateObj.getMinutes() +
-    ":" +
-    dateObj.getSeconds() +
+    formatTime(
+      dateObj.getHours().toString(),
+      dateObj.getMinutes().toString(),
+      dateObj.getSeconds().toString()
+    ) +
     "] ";
-  return DateStr1;
+  return DateStr;
+}
+function formatTime(hour, minute, second) {
+  const hours = hour.length == 1 ? "0" + hour : hour;
+  const minutes = minute.length == 1 ? "0" + minute : minute;
+  const seconds = second.length == 1 ? "0" + second : second;
+  return hours + ":" + minutes + ":" + seconds;
 }
 
 const errorLogFilePath = __dirname + "/../errorLog.txt";
@@ -95,6 +91,10 @@ const commands = [
   {
     name: "help",
     description: "Shows commands summary.",
+  },
+  {
+    name: "auso",
+    description: "Shows information about the AUSO team.",
   },
   {
     name: "rps",
@@ -153,6 +153,18 @@ const commands = [
       {
         name: "user",
         description: "User to annoy.",
+        type: 6,
+        required: true,
+      },
+    ],
+  },
+  {
+    name: "fight",
+    description: "Fights a user.",
+    options: [
+      {
+        name: "user",
+        description: "User to fight.",
         type: 6,
         required: true,
       },
@@ -282,6 +294,44 @@ function help(message) {
         value: "Shows the number of members in the server.",
       },
       { name: "!help", value: "Shows this command!" }
+    );
+  message.reply({ embeds: [embed] });
+}
+
+function auso(message) {
+  const embed = new EmbedBuilder()
+    .setTitle("AUSO")
+    .setColor("29bcc0")
+    .setDescription(
+      "Familiarize yourself with the key members of the AUSO team."
+    )
+    .setImage("https://pbs.twimg.com/media/EpS1HMIXYAcamyj.jpg:large")
+    .setTimestamp()
+    .setFooter({
+      text: "Glory to AUSO.",
+      iconURL: "https://pbs.twimg.com/media/EpS1HMIXYAcamyj.jpg:large",
+    })
+    .addFields(
+      {
+        name: "Kuzrite - Head Sushunter",
+        value: "a",
+      },
+      {
+        name: "WillTheOofer - Deputy Head Sushunter",
+        value: "a",
+      },
+      {
+        name: "AliasAltan - Lead Insustigator",
+        value: "a",
+      },
+      {
+        name: "Mrs_Sesh2 - Recruitement Lead",
+        value: "a",
+      },
+      {
+        name: "Fritz - Senior Sushunter",
+        value: "a",
+      }
     );
   message.reply({ embeds: [embed] });
 }
@@ -480,6 +530,42 @@ function RockPaperScissors(message, userChoice) {
     message.reply("Invalid choice");
   }
 }
+function fight(message, author, user) {
+  if (!user) {
+    message.reply("You need to specify a user to fight!");
+    return;
+  }
+
+  if (author.id === user.id) {
+    message.reply("You can't fight yourself!");
+    return;
+  }
+  let scenariosBeginning = [
+    "tripped over",
+    "threw a rock at",
+    "sent",
+    "kicked",
+    "punched",
+  ];
+  let scenariosEnding = [
+    ".",
+    ".",
+    " to space.",
+    " in the face.",
+    " in the gut.",
+  ];
+  let option = Math.floor(Math.random() * scenariosBeginning.length);
+  let winner = [author, user][Math.floor(Math.random() * 2)];
+  let loser = winner === author ? user : author;
+  message.reply(
+    winner.username +
+      " " +
+      scenariosBeginning[option] +
+      " " +
+      loser.username +
+      scenariosEnding[option]
+  );
+}
 
 function eightball(message, query) {
   if (!query) {
@@ -545,6 +631,9 @@ client.on("messageCreate", async (message) => {
     case "help":
       help(message);
       break;
+    case "auso":
+      auso(message);
+      break;
     case "rps":
       RockPaperScissors(message, args[1]);
       break;
@@ -571,6 +660,9 @@ client.on("messageCreate", async (message) => {
       break;
     case "annoy":
       annoy(message, args[1], annoyThreshold + 1);
+      break;
+    case "fight":
+      fight(message, message.author, message.mentions.users.first());
       break;
     case "kick":
       kick(message, args[1], args[2]);
@@ -612,6 +704,9 @@ client.on("interactionCreate", async (interaction) => {
     case "help":
       help(interaction);
       break;
+    case "auso":
+      auso(interaction);
+      break;
     case "membercount":
       membercount(interaction);
       break;
@@ -631,6 +726,10 @@ client.on("interactionCreate", async (interaction) => {
         content: "Annoying " + user.username,
         ephemeral: true,
       });
+      break;
+    case "fight":
+      user = interaction.options.getUser("user");
+      fight(interaction, interaction.user, user);
       break;
     case "kick":
       user = interaction.options.getUser("user");
