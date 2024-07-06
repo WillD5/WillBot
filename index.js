@@ -1,3 +1,8 @@
+/**
+ * A general purpose discord bot, currently used for fun and moderation mainly.
+ * Credits to bluejer1 for the original code.
+ */
+
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -7,7 +12,6 @@ const fs = require("node:fs");
 
 import { fileURLToPath } from "url";
 import { dirname } from "path";
-
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 import {
@@ -24,56 +28,52 @@ function isNumeric(value) {
   return /^-?\d+$/.test(value);
 }
 
-function getWeekDay(day) {
-  const days = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-  ];
-  return days[day];
-}
-
-function getMonth(month) {
-  const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-  return months[month];
-}
-
 function getCurrentDate() {
   const dateObj = new Date();
-  const DateStr1 =
+  const DateStr =
     "[" +
-    getWeekDay(dateObj.getDay()) +
+    [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ][dateObj.getDay()] +
     ", " +
     dateObj.getDate() +
     " " +
-    getMonth(dateObj.getMonth()) +
+    [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ][dateObj.getMonth()] +
     " " +
     dateObj.getFullYear() +
     " " +
-    dateObj.getHours() +
-    ":" +
-    dateObj.getMinutes() +
-    ":" +
-    dateObj.getSeconds() +
+    formatTime(
+      dateObj.getHours().toString(),
+      dateObj.getMinutes().toString(),
+      dateObj.getSeconds().toString()
+    ) +
     "] ";
-  return DateStr1;
+  return DateStr;
+}
+function formatTime(hour, minute, second) {
+  const hours = hour.length == 1 ? "0" + hour : hour;
+  const minutes = minute.length == 1 ? "0" + minute : minute;
+  const seconds = second.length == 1 ? "0" + second : second;
+  return hours + ":" + minutes + ":" + seconds;
 }
 
 const errorLogFilePath = __dirname + "/../errorLog.txt";
@@ -95,6 +95,10 @@ const commands = [
   {
     name: "help",
     description: "Shows commands summary.",
+  },
+  {
+    name: "auso",
+    description: "Shows information about the AUSO team.",
   },
   {
     name: "rps",
@@ -153,6 +157,18 @@ const commands = [
       {
         name: "user",
         description: "User to annoy.",
+        type: 6,
+        required: true,
+      },
+    ],
+  },
+  {
+    name: "fight",
+    description: "Fights a user.",
+    options: [
+      {
+        name: "user",
+        description: "User to fight.",
         type: 6,
         required: true,
       },
@@ -286,6 +302,47 @@ function help(message) {
   message.reply({ embeds: [embed] });
 }
 
+/**
+ * Need to complete descriptions
+ */
+function auso(message) {
+  const embed = new EmbedBuilder()
+    .setTitle("AUSO")
+    .setColor("29bcc0")
+    .setDescription(
+      "Familiarize yourself with the key members of the AUSO team."
+    )
+    .setImage("https://pbs.twimg.com/media/EpS1HMIXYAcamyj.jpg:large")
+    .setTimestamp()
+    .setFooter({
+      text: "Glory to AUSO.",
+      iconURL: "https://pbs.twimg.com/media/EpS1HMIXYAcamyj.jpg:large",
+    })
+    .addFields(
+      {
+        name: "Kuzrite - Head Sushunter",
+        value: "a sus person",
+      },
+      {
+        name: "WillTheOofer - Deputy Head Sushunter",
+        value: "a sus person",
+      },
+      {
+        name: "AliasAltan - Lead Insustigator",
+        value: "a sus person",
+      },
+      {
+        name: "Mrs_Sesh2 - Head of Recruitement",
+        value: "a sus person",
+      },
+      {
+        name: "Fritz - Senior Sushunter",
+        value: "a sus person",
+      }
+    );
+  message.reply({ embeds: [embed] });
+}
+
 function purge(message, number) {
   if (
     message.member.permissions.has(PermissionsBitField.Flags.ManageMessages)
@@ -331,12 +388,16 @@ async function kick(message, query, reason = "") {
             user.user.username +
             " has been successfully kicked."
         );
-        "User " +
-          message.member.user.username +
-          " has kicked " +
-          user.user.username;
+        client.channels.cache
+          .get(moderationChannelId)
+          .send(
+            "User " +
+              message.member.user.username +
+              " has kicked " +
+              user.user.username
+          );
       })
-      .catch(() => {
+      .catch((e) => {
         message.reply(
           ":x: | An error has occured, contact the Bot Maintainer."
         );
@@ -354,39 +415,46 @@ async function ban(message, query, reason = "") {
       return;
     }
     var user = "";
+    var id = 0;
+    var isServerMember = true;
     try {
       if (isNumeric(query)) {
-        var user = await message.guild.members.fetch(query);
+        id = query;
+        try {
+          user = await message.guild.members.fetch(query);
+        } catch (e) {
+          user = await client.users.fetch(query);
+          isServerMember = false;
+        }
       } else {
-        var user = await message.mentions.members.first();
+        user = await message.mentions.members.first();
+        id = user.user.id;
       }
     } catch (e) {
       message.reply("Invalid user");
       return;
     }
-    const id = user.user.id;
-    if (user.permissions.has(PermissionsBitField.Flags.Administrator)) {
-      message.reply(":x: I cannot ban this user!");
-      return;
-    }
+    var username = "";
+    if (isServerMember) {
+      if (user.permissions.has(PermissionsBitField.Flags.Administrator)) {
+        message.reply(":x: I cannot ban this user!");
+        return;
+      }
+      username = user.user.username;
+    } else username = user.username;
     message.guild.members
       .ban(id, { reason: reason })
       .then(() => {
         message.reply(
-          ":white_check_mark: | " +
-            user.user.username +
-            " has been successfully banned."
+          ":white_check_mark: | " + username + " has been successfully banned."
         );
         client.channels.cache
           .get(moderationChannelId)
           .send(
-            "User " +
-              message.member.user.username +
-              " has banned " +
-              user.user.username
+            "User " + message.member.user.username + " has banned " + username
           );
       })
-      .catch(() => {
+      .catch((e) => {
         message.reply(
           ":x: | An error has occured, contact the Bot Maintainer."
         );
@@ -405,14 +473,7 @@ function unban(message, id, reason = "") {
     }
     message.guild.members
       .unban(id, reason)
-      .then((e) => {
-        if (e) {
-          message.reply(
-            ":x: | An error has occured, contact the Bot Maintainer."
-          );
-          writeErrorLog("Error while trying to unban user: " + e);
-          return;
-        }
+      .then(() => {
         message.channel.send(
           ":white_check_mark: | user has been successfully unbanned."
         );
@@ -425,7 +486,7 @@ function unban(message, id, reason = "") {
               id
           );
       })
-      .catch(() => {
+      .catch((e) => {
         message.reply(":x: | User is not banned.");
       });
   } else {
@@ -475,6 +536,53 @@ function RockPaperScissors(message, userChoice) {
   } else {
     message.reply("Invalid choice");
   }
+}
+/**
+ * May add some other scenarios (thanks ChatGPT lmao)
+ */
+function fight(message, author, user) {
+  if (!user) {
+    message.reply("You need to specify a user to fight!");
+    return;
+  }
+
+  if (author.id === user.id) {
+    message.reply("You can't fight yourself!");
+    return;
+  }
+  let scenariosBeginning = [
+    "tripped over",
+    "threw a rock at",
+    "sent",
+    "kicked",
+    "punched",
+    "tosses a banana peel on the ground, causing",
+    "holds up a mirror, and",
+    "has a powerful sneeze that sends",
+    "has a cute puppy run into the fight, and",
+  ];
+  let scenariosEnding = [
+    ".",
+    ".",
+    " to space.",
+    " in the face.",
+    " in the gut.",
+    " to slip and fall.",
+    " is so shocked by their own reflection that they trip over their own feet and fall.",
+    " flying across the room.",
+    " is so distracted by the adorable pup that they forget to defend themselves.",
+  ];
+  let option = Math.floor(Math.random() * scenariosBeginning.length);
+  let winner = [author, user][Math.floor(Math.random() * 2)];
+  let loser = winner === author ? user : author;
+  message.reply(
+    winner.username +
+      " " +
+      scenariosBeginning[option] +
+      " " +
+      loser.username +
+      scenariosEnding[option]
+  );
 }
 
 function eightball(message, query) {
@@ -541,6 +649,9 @@ client.on("messageCreate", async (message) => {
     case "help":
       help(message);
       break;
+    case "auso":
+      auso(message);
+      break;
     case "rps":
       RockPaperScissors(message, args[1]);
       break;
@@ -567,6 +678,9 @@ client.on("messageCreate", async (message) => {
       break;
     case "annoy":
       annoy(message, args[1], annoyThreshold + 1);
+      break;
+    case "fight":
+      fight(message, message.author, message.mentions.users.first());
       break;
     case "kick":
       kick(message, args[1], args[2]);
@@ -608,6 +722,9 @@ client.on("interactionCreate", async (interaction) => {
     case "help":
       help(interaction);
       break;
+    case "auso":
+      auso(interaction);
+      break;
     case "membercount":
       membercount(interaction);
       break;
@@ -627,6 +744,10 @@ client.on("interactionCreate", async (interaction) => {
         content: "Annoying " + user.username,
         ephemeral: true,
       });
+      break;
+    case "fight":
+      user = interaction.options.getUser("user");
+      fight(interaction, interaction.user, user);
       break;
     case "kick":
       user = interaction.options.getUser("user");
