@@ -1,3 +1,8 @@
+/**
+ * A general purpose discord bot, currently used for fun and moderation mainly.
+ * Credits to bluejer1 for the original code.
+ */
+
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -7,7 +12,6 @@ const fs = require("node:fs");
 
 import { fileURLToPath } from "url";
 import { dirname } from "path";
-
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 import {
@@ -534,7 +538,7 @@ function RockPaperScissors(message, userChoice) {
   }
 }
 /**
- * Need to add more scenarios
+ * May add some other scenarios (thanks ChatGPT lmao)
  */
 function fight(message, author, user) {
   if (!user) {
@@ -552,6 +556,10 @@ function fight(message, author, user) {
     "sent",
     "kicked",
     "punched",
+    "tosses a banana peel on the ground, causing",
+    "holds up a mirror, and",
+    "has a powerful sneeze that sends",
+    "has a cute puppy run into the fight, and",
   ];
   let scenariosEnding = [
     ".",
@@ -559,6 +567,10 @@ function fight(message, author, user) {
     " to space.",
     " in the face.",
     " in the gut.",
+    " to slip and fall.",
+    " is so shocked by their own reflection that they trip over their own feet and fall.",
+    " flying across the room.",
+    " is so distracted by the adorable pup that they forget to defend themselves.",
   ];
   let option = Math.floor(Math.random() * scenariosBeginning.length);
   let winner = [author, user][Math.floor(Math.random() * 2)];
