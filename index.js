@@ -286,6 +286,10 @@ function help(message) {
         value: "Ask the 8ball a question and it will give you an answer!",
       },
       {
+        name: "!fight (ping user to fight)",
+        value: "Fight a user! The bot will send a random win message along a random winner and loser between both users.",
+      },
+      {
         name: "!rng",
         value: "Generate a random number going from 1 to 100!",
       },
@@ -297,6 +301,7 @@ function help(message) {
         name: "!membercount",
         value: "Shows the number of members in the server.",
       },
+      { name: "!auso", value: "Shows AUSO's key members." },
       { name: "!help", value: "Shows this command!" }
     );
   message.reply({ embeds: [embed] });
