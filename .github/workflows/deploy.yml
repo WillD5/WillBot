@@ -16,7 +16,7 @@ jobs:
           username: ${{ secrets.USERNAME}}
 
           script: |
-            pm2 stop index
+            pm2 stop bot
             sudo rm -rf WillBot
             sudo apt-get update -y
             sudo git clone https://github.com/WillD5/WillBot.git
@@ -28,4 +28,4 @@ jobs:
             sudo bash -c 'echo ENVIRONMENT=PROD >> .env'
             sudo bash -c 'echo STATUS_CHANNEL_ID = 1244730880551944192 >> .env'
             sudo bash -c 'echo MODERATION_CHANNEL_ID = 1242905048846041189 >> .env'
-            pm2 start index.js
+            pm2 start index.js --name bot
