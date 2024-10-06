@@ -28,4 +28,4 @@ jobs:
             sudo bash -c 'echo ENVIRONMENT=PROD >> .env'
             sudo bash -c 'echo STATUS_CHANNEL_ID = 1244730880551944192 >> .env'
             sudo bash -c 'echo MODERATION_CHANNEL_ID = 1242905048846041189 >> .env'
-            pm2 start index.js --name bot
+            pm2 start ../ecosystem.config.js --only bot
